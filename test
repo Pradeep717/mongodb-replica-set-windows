@@ -1,0 +1,42 @@
+# FILEPATH
+
+"""
+MongoDB Replica Set
+
+A MongoDB replica set is a group of MongoDB servers that maintain the same data set, providing redundancy and high availability. Replica sets are the recommended way to achieve fault tolerance and scalability in MongoDB.
+
+Commands:
+
+1. rs.initiate(config): Initializes a new replica set with the given configuration.
+    - config: The configuration object specifying the replica set members.
+
+2. rs.status(): Retrieves the status of the replica set, including information about the members, their state, and the primary member.
+
+3. rs.add(member): Adds a new member to the replica set.
+    - member: The configuration object specifying the new member.
+
+4. rs.remove(member): Removes a member from the replica set.
+    - member: The configuration object specifying the member to be removed.
+
+5. rs.reconfig(config): Reconfigures the replica set with the new configuration.
+    - config: The new configuration object specifying the replica set members.
+
+6. rs.stepDown(): Forces the current primary member to step down and trigger an election for a new primary.
+
+7. rs.freeze(seconds): Prevents the current primary member from becoming a primary for the specified number of seconds.
+    - seconds: The number of seconds to freeze the primary.
+
+8. rs.secondaryOk(): Allows reads from secondary members of the replica set.
+
+9. rs.slaveOk(): Deprecated. Use rs.secondaryOk() instead.
+
+10. rs.printReplicationInfo(): Prints information about the replication status of the replica set.
+
+11. rs.printSecondaryReplicationInfo(): Prints information about the replication status of the secondary members.
+
+12. rs.printSlaveReplicationInfo(): Deprecated. Use rs.printSecondaryReplicationInfo() instead.
+
+These commands are used to manage and monitor the MongoDB replica set, including initializing, adding/removing members, checking status, and performing administrative tasks.
+
+For more information, refer to the MongoDB documentation: https://docs.mongodb.com/manual/replication/
+"""
