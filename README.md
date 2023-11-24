@@ -1,93 +1,207 @@
 # MongoDB Replica Set Setup on Windows
 
-This guide will walk you through the process of setting up a MongoDB replica set on Windows.
+This guide provides a step-by-step process for setting up a MongoDB replica set on a Windows environment.
 
 ## Prerequisites
 
-- MongoDB installed on your Windows machine.
-- Administrator access to change file permissions.
+Ensure the following prerequisites are met before setting up the MongoDB replica set:
 
-## Step 1: Change File Permissions
+- Installed MongoDB on your Windows machine.
+- Administrator access to modify file permissions.
 
-First, we need to change the read, write, and execute privileges of the `mongod.cfg` file. Open the command prompt as an administrator and run the following command:
+## Step-by-Step Setup
 
-```shell
-icacls "C:\path\to\mongod.cfg" /grant "username":F
-```
+### Step 1: Change File Permissions
 
-Here, replace `"C:\path\to\mongod.cfg"` with the actual path to your `mongod.cfg` file and `"username"` with your actual username.
+To modify file permissions, follow these steps:
 
-The permissions abbreviations are as follows:
+1. Open Command Prompt as an administrator.
+2. Run the following command:
 
-- F: Full control
-- M: Modify access
-- RX: Read and execute access
-- R: Read-only access
-- W: Write-only access
+   ```shell
+   icacls "C:\path\to\mongod.cfg" /grant "username":F
+   ```
 
-## Step 2: Modify the Configuration File
+   Replace `"C:\path\to\mongod.cfg"` with your `mongod.cfg` file's actual path and `"username"` with your username.
 
-Next, we need to modify the `mongod.cfg` file to enable replication. Add the following lines to the file:
+### Step 2: Modify the Configuration File
+
+Update the `mongod.cfg` file to enable replication by adding the following lines:
 
 ```yaml
 replication:
   replSetName: rs0
 ```
-![](https://res.cloudinary.com/dj76d2css/image/upload/v1700647533/MKevyji9Ef_idbfvj.png)
 
-## Step 3: Start MongoDB with the Replica Set Option
+### Step 3: Setting up MongoDB Replica Set using Docker
 
-Open a new command prompt and start MongoDB with the `--replSet` option:
+If you prefer Docker for setting up a MongoDB replica set, follow these steps:
 
-```shell
-mongod --replSet rs0
-```
-![](https://res.cloudinary.com/dj76d2css/image/upload/v1700647546/WindowsTerminal_QtzsmbEk98_qwtzuu.png)
+1. Stop and remove existing Docker containers:
 
-## Step 4: Connect to MongoDB Shell
+   ```shell
+   docker-compose down
+   ```
 
-In a new command prompt window, connect to the MongoDB shell by typing:
+2. Update the `docker-compose.yaml` file to map ports correctly.
 
-```shell
-mongosh
-```
+   Here is an example configuration:
 
-## Step 5: Initiate the Replica Set
+   ```yaml
+   version: '3'
+   services:
+     mongo1:
+       image: mongo
+       container_name: mongo1
+       ports:
+         - "3001:27017"
+       command: mongod --replSet rs0
+     mongo2:
+       image: mongo
+       container_name: mongo2
+       ports:
+         - "3002:27017"
+       command: mongod --replSet rs0
+     mongo3:
+       image: mongo
+       container_name: mongo3
+       ports:
+         - "3003:27017"
+       command: mongod --replSet rs0
+   ```
 
-Finally, initiate the replica set using the following command in the MongoDB shell:
+3. Start Docker containers:
 
-```shell
-rs.initiate()
-```
-![](https://res.cloudinary.com/dj76d2css/image/upload/v1700647553/WindowsTerminal_jbxO3Ke9Cf_u33ziu.png)
+   ```shell
+   docker-compose up -d
+   ```
 
-## MongoDB Replica Set Commands
+4. Connect to the first MongoDB instance and initiate the replica set:
 
-Here are some commonly used MongoDB replica set commands¹:
+   ```shell
+   docker exec -it mongo1 mongo
+   rs.initiate({_id: "rs0", members: [{_id: 0, host: "mongo1:27017"}]})
+   ```
 
-- `rs.add()`: Adds a member to a replica set.
-- `rs.addArb()`: Adds an arbiter to a replica set.
-- `rs.conf()`: Returns the replica set configuration document.
-- `rs.freeze()`: Prevents the current member from seeking election as primary for a period of time.
-- `rs.help()`: Returns basic help text for replica set functions.
-- `rs.initiate()`: Initializes a new replica set.
-- `rs.printReplicationInfo()`: Prints a formatted report of the replica set status from the perspective of the primary.
-- `rs.printSecondaryReplicationInfo()`: Prints a formatted report of the replica set status from the perspective of the secondaries.
-- `rs.reconfig()`: Re-configures a replica set by applying a new replica set configuration object.
-- `rs.remove()`: Remove a member from a replica set.
-- `rs.status()`: Returns a document with information about the state of the replica set.
-- `rs.stepDown()`: Causes the current primary to become a secondary which forces an election.
-- `rs.syncFrom()`: Sets the member that this replica set member will sync from, overriding the default sync target selection logic.
+5. Add the other two instances to the replica set:
 
-For more detailed information about these commands, please refer to the [MongoDB Manual](^1^).
+   ```shell
+   rs.add("mongo2:27017")
+   rs.add("mongo3:27017")
+   ```
 
-That's it! You have successfully set up a MongoDB replica set on your Windows machine. If you have any questions or run into any issues, feel free to open an issue on this repository.
+6. Check the status of the replica set:
 
-Please replace the placeholders with the actual values as per your setup. Let me know if you need any further assistance!
+   ```shell
+   rs.status()
+   ```
+
+## MongoDB Replica Set Commands and Operations
+
+When working with a MongoDB replica set, various commands and operations help manage the set's configuration and status.
+
+### Adding Members to the Replica Set
+
+- **`rs.add()`**: Adds a new member to the replica set. For instance:
+  ```javascript
+  rs.add("newMember.example.com:27017")
+  ```
+
+- **`rs.addArb()`**: Adds an arbiter to the replica set, ensuring a voting member for elections. For example:
+  ```javascript
+  rs.addArb("arbiter.example.com:27017")
+  ```
+
+### Configuration and Information Retrieval
+
+- **`rs.conf()`**: Retrieves the current replica set configuration details:
+  ```javascript
+  rs.conf()
+  ```
+
+- **`rs.status()`**: Provides the status of the replica set:
+  ```javascript
+  rs.status()
+  ```
+
+- **`rs.printReplicationInfo()`**: Displays detailed replication information from the primary's perspective:
+  ```javascript
+  rs.printReplicationInfo()
+  ```
+
+- **`rs.printSecondaryReplicationInfo()`**: Prints replication details from the secondary's perspective:
+  ```javascript
+  rs.printSecondaryReplicationInfo()
+  ```
+
+### Modifying Replica Set and Server Behavior
+
+- **`rs.freeze()`**: Temporarily prevents the current member from seeking election as primary for a specified period:
+  ```javascript
+  rs.freeze(300) // Freezes for 300 seconds
+  ```
+
+- **`rs.reconfig()`**: Reconfigures the replica set by applying a new configuration object:
+  ```javascript
+  const newConfig = {
+    _id: "rsNew",
+    members: [
+      { _id: 0, host: "mongo1:27017" },
+      { _id: 1, host: "mongo2:27017" },
+      // Add or remove members as needed
+    ]
+  }
+  rs.reconfig(newConfig)
+  ```
+
+### Removing Members from the Replica Set
+
+- **`rs.remove()`**: Removes a member from the replica set. For instance:
+  ```javascript
+  rs.remove("memberToRemove.example.com:27017")
+  ```
+
+### Converting Replica Set Member to Standalone Server
+
+If you need to convert a replica set member to a standalone server, follow these steps:
+
+1. Connect to the member you want to convert.
+2. In the MongoDB shell, use the following command to step down and then shut down the member:
+   ```javascript
+   rs.stepDown()
+   use admin
+   db.shutdownServer()
+   ```
+
+3. Restart the server without the `--replSet` option.
+
+For detailed instructions and considerations, refer to [this Stack Overflow post](https://stackoverflow.com/questions/16914281/how-to-convert-a-mongodb-replica-set-to-a-stand-alone-server).
+
+### Handling Errors and Troubleshooting
+
+- **Handling getaddrinfo ENOTFOUND Error**: If encountering a `getaddrinfo ENOTFOUND` error, ensure the provided hostname and port are correct and accessible. Refer to [this Stack Overflow post](https://stackoverflow.com/questions/39108992/mongoerror-getaddrinfo-enotfound-undefined-undefined27017) for troubleshooting steps.
+
+Feel free to adjust these commands according to your specific use case and include them in your README for reference!
+
+Source:
+- [Stack Overflow - Convert MongoDB Replica Set to Standalone Server](https://stackoverflow.com/questions/16914281/how-to-convert-a-mongodb-replica-set-to-a-stand-alone-server)
+- [Stack Overflow - getaddrinfo ENOTFOUND Error](https://stackoverflow.com/questions/39108992/mongoerror-getaddrinfo-enotfound-undefined-undefined27017)
+
+For detailed information about these commands, refer to the [MongoDB Manual](^1^).
+
+## Additional Resources
+
+For further guidance and information, refer to the following resources:
+
+- [MongoDB Manual - Replication Reference](https://www.mongodb.com/docs/manual/reference/replication/)
+- [MongoDB Manual - Deploy a Replica Set](https://www.mongodb.com/docs/manual/tutorial/deploy-replica-set/)
+- [IONOS - How to use a MongoDB Replica Set](https://www.ionos.com/digitalguide/websites/web-development/mongodb-replica-set/)
+- [Guru99 - MongoDB Replication: How to Create MongoDB Replica Set](https://www.guru99.com/mongodb-replication.html)
+
+If you encounter any issues or have questions, feel free to open an issue on this repository.
+
+Ensure to replace placeholders with your actual values based on your setup.
 
 Source: Conversation with Bing, 22/11/2023
-(1) Replication Reference — MongoDB Manual. https://www.mongodb.com/docs/manual/reference/replication/.
-(2) Replication Reference — MongoDB Manual. https://www.mongodb.com/docs/manual/reference/replication/.
-(3) Deploy a Replica Set — MongoDB Manual. https://www.mongodb.com/docs/manual/tutorial/deploy-replica-set/.
-(4) How to use a MongoDB Replica Set - IONOS. https://www.ionos.com/digitalguide/websites/web-development/mongodb-replica-set/.
-(5) MongoDB Replication: How to Create MongoDB Replica Set - Guru99. https://www.guru99.com/mongodb-replication.html.
+
+(1) [Replication Reference — MongoDB Manual](https://www.mongodb.com/docs/manual/reference/replication/)
