@@ -95,6 +95,11 @@ If you prefer Docker for setting up a MongoDB replica set, follow these steps:
    ```shell
    rs.status()
    ```
+7. connect to mongosh ( new cmd not on mongosh shell )
+   
+   ```shell
+   mongosh --host localhost --port 3001
+   ```
 
 ## MongoDB Replica Set Commands and Operations
 
